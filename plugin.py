@@ -89,7 +89,7 @@ class BasePlugin:
         Domoticz.Debug("message received " + payload)
 
         for button in range(1,3):
-            if message.topic == "stat/" + self.mqttStatetopic + "/POWER" + str(button)):
+            if message.topic == "stat/" + self.mqttStatetopic + "/POWER" + str(button):
                 Domoticz.Debug("Power Stand " + str(button))
                 self.updateVentilatorState(button)
 
@@ -117,13 +117,13 @@ class BasePlugin:
         Domoticz.Debug("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         if Level == 10:
             Domoticz.Log("Ventilatiesysteem stand 1")
-            self.mqttClient.publish("cmnd/" + self.mqttStatetopic + "/power1"), payload = "on", qos=1)
+            self.mqttClient.publish("cmnd/" + self.mqttStatetopic + "/POWER1"), payload = "on", qos=1)
         elif Level == 20:
             Domoticz.Log("Ventilatiesysteem stand 2")
-            self.mqttClient.publish("cmnd/" + self.mqttStatetopic + "/power2"), payload = "on", qos=1)
+            self.mqttClient.publish("cmnd/" + self.mqttStatetopic + "/POWER2"), payload = "on", qos=1)
         elif Level == 30:
             Domoticz.Log("Ventilatiesysteem stand 3")
-            self.mqttClient.publish("cmnd/" + self.mqttStatetopic + "/power3"), payload = "on", qos=1)
+            self.mqttClient.publish("cmnd/" + self.mqttStatetopic + "/POWER3"), payload = "on", qos=1)
 
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
