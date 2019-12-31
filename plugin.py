@@ -46,7 +46,7 @@ class BasePlugin:
             Domoticz.Log("Debugging ON")
 
         if (len(Devices) == 0):
-            Options = {"LevelActions": "|||","LevelNames": "|Stand 1|Stand 2|Stand 3","LevelOffHidden": "true","SelectorStyle": "0"}
+            Options = {"LevelActions": "0|10|20|30","LevelNames": "|Stand 1|Stand 2|Stand 3","LevelOffHidden": "true","SelectorStyle": "0"}
             Domoticz.Device(Name="ventilatie-systeem-status", Unit=1, TypeName="Selector Switch", Switchtype=18, Options=Options).Create()
             Domoticz.Log("Ventilatie systeem device created.")
 
@@ -108,7 +108,7 @@ class BasePlugin:
         if self.ventilatiestate != state:
             Domoticz.Log("Ventilatie stand " + str(self.ventilatiestate) + " => " + str(state))
             self.ventilatiestate = state
-            Devices[Unit].Update(nValue=state * 10, sValue=str(state * 10))
+            Devices[Unit].Update(1, sValue=str(state * 10))
 
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
