@@ -1,0 +1,190 @@
+# Domoticz garage door
+# Works with domoticz and MQTT
+# Author: Sjaak Spiegels
+#
+"""
+<plugin key="Garagedoor" name="Garagedoor" version="1.0.0" author="Sjaak" wikilink="" externallink="">
+    <params>
+        <param field="Address" label="MQTT Server" width="200px" required="true" default=""/>
+        <param field="Port" label="MQTT Port" width="150px" required="true" default="1883"/>
+        <param field="Username" label="MQTT Username" width="150px" required="true" default=""/>
+        <param field="Password" label="MQTT Password" width="150px" required="true" default="" password="true"/>
+        <param field="Mode1" label="MQTT State Topic" width="150px" required="true" default=""/>
+        <param field="Mode6" label="Debug" width="75px">
+            <options>
+                <option label="True" value="Debug" default="true"/>
+                <option label="False" value="Normal" />
+            </options>
+      </param>
+  </params>
+  </plugin>
+"""
+
+import Domoticz
+import http.client
+import base64
+import json
+import paho.mqtt.client as mqtt
+
+class BasePlugin:
+ 
+    mqttClient = None
+    mqttServeraddress = "localhost"
+    mqttServerport = 1883
+    mqttUsername = ""
+    mqttPassword = ""
+    mqttStatetopic = ""
+    ventilatiestate = 1
+
+    def __init__(self):
+        return
+
+    def onStart(self):
+        Domoticz.Debug("onStart called")
+        if Parameters["Mode6"] == "Debug":
+            Domoticz.Debugging(1)        
+            Domoticz.Log("Debugging ON")
+
+        if (len(Devices) == 0):
+            Options = {"LevelActions": "|||","LevelNames": "|Stand 1|Stand 2|Stand 3","LevelOffHidden": "true","SelectorStyle": "0"}
+            Domoticz.Device(Name="ventilatie-systeem-status", Unit=1, TypeName="Selector Switch", Switchtype=18, Options=Options).Create()
+            Domoticz.Log("Ventilatie systeem device created.")
+
+        self.updateVentilatorState(1)
+
+        self.mqttServeraddress = Parameters["Address"].strip()
+        self.mqttServerport = Parameters["Port"].strip()
+        self.mqttUsername = Parameters["Username"].strip()
+        self.mqttPassword = Parameters["Password"].strip()
+        self.mqttStatetopic = Parameters["Mode1"].strip()
+
+        self.mqttClient = mqtt.Client()
+        self.mqttClient.on_connect = onMQTTConnect
+        self.mqttClient.on_subscribe = onMQTTSubscribe
+        self.mqttClient.on_message = onMQTTmessage
+        self.mqttClient.username_pw_set(username=self.mqttUsername, password=self.mqttPassword)
+        self.mqttClient.connect(self.mqttServeraddress, int(self.mqttServerport), 60)        
+        self.mqttClient.loop_start()
+
+    def onStop(self):
+        Domoticz.Debug("onStop called")
+        self.mqttClient.unsubscribe(self.mqttStatetopic)
+        self.mqttClient.disconnect()
+
+    def onConnect(self, Connection, Status, Description):
+        Domoticz.Debug("onConnect called")
+
+    def onMQTTConnect(self, client, userdata, flags, rc):
+        Domoticz.Debug("onMQTTConnect called")
+        Domoticz.Debug("Connected to " + self.mqttServeraddress + " with result code {}".format(rc))
+        self.mqttClient.subscribe("tele/" + self.mqttStatetopic,1)
+        self.mqttClient.subscribe("cmnd/" + self.mqttStatetopic,1)
+
+    def onMQTTSubscribe(self, client, userdata, mid, granted_qos):
+        Domoticz.Debug("onMQTTSubscribe called")
+
+    def onMQTTmessage(self, client, userdata, message):
+        Domoticz.Debug("message topic=" + message.topic)
+        payload = str(message.payload.decode("utf-8"))
+        Domoticz.Debug("message received " + payload)
+
+        for button in range(1,3):
+            if message.topic == "stat/" + self.mqttStatetopic.replace("#",'POWER' + str(button)):
+                Domoticz.Debug("Power Stand " + str(button))
+                self.updateVentilatorState(button)
+
+        if message.topic == "tele/" + self.mqttStatetopic.replace("#",'STATE'):
+            json_msg = json.loads(payload)
+            Domoticz.Debug("Stater message: " + str(json_msg))
+            for button in range(1,3):
+                if json_msg["POWER" + str(button)] == "ON":
+                    Domoticz.Debug("Power Stand " + str(button))
+                    self.updateVentilatorState(button)
+
+    def updateVentilatorState(self, state):
+        Domoticz.Debug("Update ventilator state to " + str(state))
+        Domoticz.Debug("Garage door current state: " + self.ventilatiestate)
+
+        if self.ventilatiestate != state:
+            Domoticz.Log("Ventilatie stand " + str(self.ventilatiestate) + " => " + str(state))
+            self.ventilatiestate = state
+            Devices[Unit].Update(nValue=state * 10, sValue="Stand " + str(state))
+
+    def onMessage(self, Connection, Data):
+        Domoticz.Debug("onMessage called")
+
+    def onCommand(self, Unit, Command, Level, Hue):
+        Domoticz.Debug("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        if Level == 10:
+            Domoticz.Log("Ventilatiesysteem stand 1")
+            self.mqttClient.publish("cmnd/" + self.mqttStatetopic.replace("#","power1"), payload = "on", qos=1)
+        elif Level == 20:
+            Domoticz.Log("Ventilatiesysteem stand 2")
+            self.mqttClient.publish("cmnd/" + self.mqttStatetopic.replace("#","power2"), payload = "on", qos=1)
+        elif Level == 30:
+            Domoticz.Log("Ventilatiesysteem stand 3")
+            self.mqttClient.publish("cmnd/" + self.mqttStatetopic.replace("#","power3"), payload = "on", qos=1)
+
+
+    def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
+        Domoticz.Debug("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
+
+    def onDisconnect(self, Connection):
+        Domoticz.Debug("onDisconnect called")
+
+    def onDeviceModified(self, Unit):
+        Domoticz.Debug("onDeviceModified called for Unit " + str(Unit))
+
+    def onHeartbeat(self):
+        Domoticz.Debug("onHeartbeat called")
+
+global _plugin
+_plugin = BasePlugin()
+
+def onStart():
+    global _plugin
+    _plugin.onStart()
+
+def onStop():
+    global _plugin
+    _plugin.onStop()
+
+def onConnect(Connection, Status, Description):
+    global _plugin
+    _plugin.onConnect(Connection, Status, Description)
+
+def onMessage(Connection, Data):
+    global _plugin
+    _plugin.onMessage(Connection, Data)
+
+def onCommand(Unit, Command, Level, Hue):
+    global _plugin
+    _plugin.onCommand(Unit, Command, Level, Hue)
+
+def onNotification(Name, Subject, Text, Status, Priority, Sound, ImageFile):
+    global _plugin
+    _plugin.onNotification(Name, Subject, Text, Status, Priority, Sound, ImageFile)
+
+def onDisconnect(Connection):
+    global _plugin
+    _plugin.onDisconnect(Connection)
+
+def onHeartbeat():
+    global _plugin
+    _plugin.onHeartbeat()
+
+def onDeviceModified(Unit):
+    global _plugin
+    _plugin.onDeviceModified(Unit)
+
+def onMQTTConnect(client, userdata, flags, rc):
+    global _plugin
+    _plugin.onMQTTConnect(client, userdata, flags, rc)
+
+def onMQTTSubscribe(client, userdata, mid, granted_qos):
+    global _plugin
+    _plugin.onMQTTSubscribe(client, userdata, mid, granted_qos)
+
+def onMQTTmessage(client, userdata, message):
+    global _plugin
+    _plugin.onMQTTmessage(client, userdata, message)
