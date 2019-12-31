@@ -108,7 +108,7 @@ class BasePlugin:
         if self.ventilatiestate != state:
             Domoticz.Log("Ventilatie stand " + str(self.ventilatiestate) + " => " + str(state))
             self.ventilatiestate = state
-            Devices[Unit].Update(nValue = 1, sValue="Stand 2")
+            Devices[Unit].Update(nValue = 10, sValue="10")
 
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
