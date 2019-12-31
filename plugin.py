@@ -1,9 +1,9 @@
-# Domoticz garage door
+# Domoticz ventilatie systeem
 # Works with domoticz and MQTT
 # Author: Sjaak Spiegels
 #
 """
-<plugin key="Ventilatie-systeem" name="Garagedoor" version="1.0.0" author="Sjaak" wikilink="" externallink="">
+<plugin key="Ventilatie-systeem" name="Ventilatie-systeem" version="1.0.0" author="Sjaak" wikilink="" externallink="">
     <params>
         <param field="Address" label="MQTT Server" width="200px" required="true" default=""/>
         <param field="Port" label="MQTT Port" width="150px" required="true" default="1883"/>
