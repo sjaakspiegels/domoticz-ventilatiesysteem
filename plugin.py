@@ -107,7 +107,7 @@ class BasePlugin:
         if self.ventilatiestate != state:
             Domoticz.Log("Ventilatie stand " + str(self.ventilatiestate) + " => " + str(state))
             self.ventilatiestate = state
-            UpdateDevice(Unit, state * 10, str(state * 10))
+            UpdateDevice(1, state * 10, str(state * 10))
 
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
@@ -191,6 +191,7 @@ def onMQTTmessage(client, userdata, message):
 
 def UpdateDevice(Unit, nValue, sValue):
 # Make sure that the Domoticz device still exists (they can be deleted) before updating it 
+    Domoticz.Debug("Update function")
     if (Unit in Devices):
         Domoticz.Debug("======== Device found ===================")
         if (Devices[Unit].nValue != nValue) or (Devices[Unit].sValue != sValue):
