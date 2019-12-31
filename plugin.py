@@ -102,13 +102,13 @@ class BasePlugin:
                     self.updateVentilatorState(button)
 
     def updateVentilatorState(self, state):
+        Domoticz.Debug("Ventilator current state: " + str(self.ventilatiestate))
         Domoticz.Debug("Update ventilator state to " + str(state))
-        Domoticz.Debug("Garage door current state: " + str(self.ventilatiestate))
 
         if self.ventilatiestate != state:
             Domoticz.Log("Ventilatie stand " + str(self.ventilatiestate) + " => " + str(state))
             self.ventilatiestate = state
-            Devices[Unit].Update(nValue=state * 10, sValue="Stand " + str(state))
+            Devices[Unit].Update(nValue=state * 10, sValue=str(state * 10))
 
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
