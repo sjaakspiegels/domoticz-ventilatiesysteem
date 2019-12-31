@@ -103,7 +103,7 @@ class BasePlugin:
 
     def updateVentilatorState(self, state):
         Domoticz.Debug("Update ventilator state to " + str(state))
-        Domoticz.Debug("Garage door current state: " + self.ventilatiestate)
+        Domoticz.Debug("Garage door current state: " + str(self.ventilatiestate))
 
         if self.ventilatiestate != state:
             Domoticz.Log("Ventilatie stand " + str(self.ventilatiestate) + " => " + str(state))
