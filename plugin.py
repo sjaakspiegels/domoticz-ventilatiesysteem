@@ -192,6 +192,7 @@ def onMQTTmessage(client, userdata, message):
 def UpdateDevice(Unit, nValue, sValue):
 # Make sure that the Domoticz device still exists (they can be deleted) before updating it 
     if (Unit in Devices):
+        Domoitz.Debug("Device found")
         if (Devices[Unit].nValue != nValue) or (Devices[Unit].sValue != sValue):
             Devices[Unit].Update(nValue=nValue, sValue=str(sValue))
             Domoticz.Debug("Update "+str(nValue)+":'"+str(sValue)+"' ("+Devices[Unit].Name+")")
