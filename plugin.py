@@ -108,8 +108,7 @@ class BasePlugin:
         if self.ventilatiestate != state:
             Domoticz.Log("Ventilatie stand " + str(self.ventilatiestate) + " => " + str(state))
             self.ventilatiestate = state
-            Options = {"LevelActions": "|||","LevelNames": "Off|Stand 1|Stand 2|Stand 3","LevelOffHidden": "true","SelectorStyle": "0"}
-            Devices[Unit].Update(nValue = 10, sValue="10", Options=Options)
+            UpdateDevice(Unit, state * 10, str(state * 10))
 
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
@@ -189,3 +188,12 @@ def onMQTTSubscribe(client, userdata, mid, granted_qos):
 def onMQTTmessage(client, userdata, message):
     global _plugin
     _plugin.onMQTTmessage(client, userdata, message)
+
+
+def UpdateDevice(Unit, nValue, sValue):
+# Make sure that the Domoticz device still exists (they can be deleted) before updating it 
+    if (Unit in Devices):
+        if (Devices[Unit].nValue != nValue) or (Devices[Unit].sValue != sValue):
+            Devices[Unit].Update(nValue=nValue, sValue=str(sValue))
+            Domoticz.Debug("Update "+str(nValue)+":'"+str(sValue)+"' ("+Devices[Unit].Name+")")
+    return
