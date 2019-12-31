@@ -95,8 +95,7 @@ class BasePlugin:
 
         if message.topic == "tele/" + self.mqttStatetopic + "/STATE":
             json_msg = json.loads(payload)
-            Domoticz.Debug("Stater message: " + str(json_msg))
-            for button in range(1,3):
+            for button in range(1,4):
                 if json_msg["POWER" + str(button)] == "ON":
                     Domoticz.Debug("Power Stand " + str(button))
                     self.updateVentilatorState(button)
