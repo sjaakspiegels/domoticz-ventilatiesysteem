@@ -78,7 +78,7 @@ class BasePlugin:
         Domoticz.Debug("onMQTTConnect called")
         Domoticz.Debug("Connected to " + self.mqttServeraddress + " with result code {}".format(rc))
         self.mqttClient.subscribe("tele/" + self.mqttStatetopic,1)
-        self.mqttClient.subscribe("cmnd/" + self.mqttStatetopic,1)
+        self.mqttClient.subscribe("state/" + self.mqttStatetopic,1)
 
     def onMQTTSubscribe(self, client, userdata, mid, granted_qos):
         Domoticz.Debug("onMQTTSubscribe called")
