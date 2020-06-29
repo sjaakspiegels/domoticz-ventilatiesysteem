@@ -10,6 +10,7 @@
         <param field="Username" label="MQTT Username" width="150px" required="true" default=""/>
         <param field="Password" label="MQTT Password" width="150px" required="true" default="" password="true"/>
         <param field="Mode1" label="MQTT State Topic" width="150px" required="true" default=""/>
+        <param field="Mode2" label="MQTT Bypass State Topic" width="150px" required="true" default=""/>
         <param field="Mode6" label="Debug" width="75px">
             <options>
                 <option label="True" value="Debug" default="true"/>
@@ -34,6 +35,7 @@ class BasePlugin:
     mqttUsername = ""
     mqttPassword = ""
     mqttStatetopic = ""
+    mqttBypassStatetopic = ""
     ventilatiestate = 1
 
     def __init__(self):
@@ -57,6 +59,7 @@ class BasePlugin:
         self.mqttUsername = Parameters["Username"].strip()
         self.mqttPassword = Parameters["Password"].strip()
         self.mqttStatetopic = Parameters["Mode1"].strip()
+        self.mqttBypassStatetopic = Parameters["Mode2"].strip()
 
         self.mqttClient = mqtt.Client()
         self.mqttClient.on_connect = onMQTTConnect
